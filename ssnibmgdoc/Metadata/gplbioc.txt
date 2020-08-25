@@ -1,0 +1,15 @@
+gpl	biocdb
+GPL10558	illuminaHumanv4.db
+GPL201	hgfocus.db
+GPL2507	NA
+GPL4274	NA
+GPL5175	NA
+GPL570	hgu133plus2.db
+GPL571	hgu133a2.db
+GPL6102	illuminaHumanv2.db
+GPL6106	NA
+GPL6947	illuminaHumanv3.db
+GPL80	hu6800.db
+GPL8300	NA
+GPL96	hgu133a.db
+GPL97	hgu133b.db

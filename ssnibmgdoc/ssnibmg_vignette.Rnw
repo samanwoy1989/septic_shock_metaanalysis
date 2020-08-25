@@ -1,0 +1,328 @@
+\documentclass[hidelinks,10pt,a4paper,oneside]{article}
+\usepackage{float, hyperref}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx, subfig}
+\usepackage{xcolor}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+\begin{document}
+\SweaveOpts{include=FALSE}
+\title{Vignette for ``Transcriptomic Meta-analysis Reveals Up-regulation of Gene
+Expression Functional In Osteoclast Differentiation in
+Human Septic Shock''}
+\author{Samanwoy Mukhopadhyay and Saroj Kant Mohapatra\footnote{skm1@nibmg.ac.in}}
+\maketitle
+\tableofcontents
+\section{Loading the necessary libraries and the data}
+\SweaveOpts{concordance=TRUE}
+\SweaveOpts{keep.source=TRUE}
+@
+
+<<echo=FALSE,cache=TRUE>>=
+options(digits=2, width=80, continue=" ")
+@
+
+
+This is a vignette for analysing the data of the manuscript titled ``Up-regulation of Osteoclast Differentiation is Associated with Septic Shock". Meta-analysis of publicly available gene expression data sets reveals up-regulation of osteoclast differentiation pathway associated with septic shock. For easy reproducibility of the analysis described in that manuscript, an R data package \textbf{nibmgss} has been created. The basic steps for data analysis on this package are described below.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.75\linewidth]{prisma}
+\caption{Selection of studies}
+    \label{fig:prisma}
+\end{figure}
+Electronic search was performed on medical literature and gene expression databases. Selection of studies was based on the organism (human subjects), tissue of origin (circulating leukocytes) and the platform technology (gene expression microarray) [Fig.\ref{fig:prisma}]. Gene-level meta-analysis was conducted on the six selected studies to identify the genes consistently differentially expressed in septic shock. These genes were then subjected to pathway analysis. Fig.\ref{fig:analysis_plan} depicts the flowchart of the analysis plan.
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.75\linewidth]{analysis_plan}
+\caption{Flowchart of Analysis plan}
+    \label{fig:analysis_plan}
+\end{figure}
+
+Some preliminaries before we start. Go to the directory with data and set it as a working directory.
+
+<<echo=TRUE,cache=TRUE>>=
+datapath <- "./"
+@
+
+\textit{Source}ing the ``prelim.R" file loads libraries and some useful function definitions. You may look in for the details.
+<<echo=TRUE,cache=TRUE>>=
+source("Rcode/prelim.R")
+@
+
+Now, load the package with the \textit{library} command and get the expression set object \textit{ss.eset}. \textit{allegs} includes all entrez ids for which there are expression data in septic shock.
+<<echo=TRUE,cache=TRUE>>=
+library("ssnibmg") 
+data("ss.eset")
+allegs <- featureNames(ss.eset[[1]])
+@
+Now the required libraries and the processed transcriptome data are loaded 
+in to the R environment. Let us first see the structure of the expression data matrix (first five rows and first five columns).
+<<echo=TRUE,cache=TRUE>>=
+head(exprs(ss.eset[[1]])[1:5,1:5])
+@
+
+<<echo=FALSE,cache=TRUE, eval=TRUE>>=
+print(head(exprs(ss.eset[[1]])[1:5,1:5]))
+@
+
+The rownames of the expression matrix contains Enterez Gene IDs and the columns contain the gene expression data across different samples.
+
+\section{Gene-level Meta-analysis}
+Differential expression was measured in terms of both log-fold change and p-value. For each gene, SS was compared with control and the six p-values were combined and adjusted for multiple testing (refer to the code below for details on meta-analysis) to generate a single p-value per gene. For each gene, the six log-fold changes were averaged to produce a single log-fold change. Using stringent criteria (adjusted p-value < 0.01, fold change of 2 or more), we discovered 200 genes that were consistently up-regulated in SS. As noted in Fig.~\ref{fig:dotplot}, there are more up-regulated (than down-regulated) genes in these data sets.
+
+<<echo=TRUE,cache=TRUE, eval=TRUE>>=
+source("Rcode/runGenelevelMetaanalysis.R")
+@
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.65\textwidth]{dotplot}
+\caption{Simple Dotplot of logfold change in each of the six Studies. The dotted horizontal lines refer to two-fold change in either direction.}
+    \label{fig:dotplot}
+\end{figure}
+
+
+\section{Analysing the data: Pathway enrichment analysis}
+Load the pathway annotation data from KEGG.
+
+<<echo=TRUE,cache=TRUE>>=
+data("genes.by.pathway")
+data("pathways.list")
+@
+
+\subsection{Over Representation Analysis}
+First we perform \textbf{ORA} (Over Representation Analysis) on 200 up-regulated genes obtained from the previous step by applying hypergeometric test. The basic idea is as follows. Let us consider two lists of genes: the first list being the set of up-regulated genes, and the second being the member genes of a given KEGG pathway. The task is to find out if genes belonging to this pathway are also likely to be part of the list of up-regulated genes. This is captured in a $2\times2$ contingency table as shown in Table~\ref{table:Twowaytable}. Further details may be found in the code file ``runORA.R".
+
+\newpage
+\begin{table}[!ht]
+\centering
+\begin{tabular}{|p{3.5cm}|p{4cm}|p{4cm}|}
+\hline
+& Number of genes in the given KEGG pathway & Number of genes NOT in the given KEGG pathway \\
+\hline
+Number of genes up-regulated in SS & ~~~~~~~~~~~~~~~~$n_{11}$ & ~~~~~~~~~~~~~~~~$n_{12}$  \\
+\hline
+Number of genes NOT up-regulated in SS & ~~~~~~~~~~~~~~~~$n_{21}$ & ~~~~~~~~~~~~~~~~$n_{22}$  \\
+\hline
+\end{tabular}
+\caption{\textbf{A $2\times2$ contingency table.} The table shows the four quantities of interest while estimating if a pathway is over-represented (enriched) among the set of differentially expressed genes.} %\end{flushleft}
+\label{table:Twowaytable}
+
+\end{table}
+
+
+<<echo=TRUE,cache=TRUE>>=
+source("Rcode/runORA.R")
+@
+
+The pathway ids are saved to an object named ``keggids.ora".
+<<echo=TRUE, cache=TRUE>>=
+keggids.ora <- rownames(oraGene2Kegg.up[oraGene2Kegg.up[,1]<0.001,])
+@
+
+\subsection{Gene Set Enrichment Analysis}
+Next we performed \textbf{GSEA} (Gene Set Enrichment Analysis) GSEA calls upon a global (i.e., genome-wide, not limited to any pre-selected list) search strategy to detect the KEGG pathway(s) with significant up-regulation in SS compared to control. It takes about 10 minutes on a reasonably powered computer, and you may want to save the result to a file, and read it from there in subsequent sessions (read the code in the file ``runGSEA.R" for more details).
+<<echo=TRUE,cache=TRUE>>=
+source("Rcode/runGSEA.R")
+@
+
+The pathways returned significant by GSEA are saved to an object named ``keggids.gsea".
+<<<<echo=TRUE,cache=TRUE>>=
+keggids.gsea <- names(which(gseaFp.up==0.0))
+@
+\subsection{Signaling Pathway Impact Analysis}
+\textbf{SPIA} (Signaling Pathway Impact Analysis) on the data. SPIA combines elements of ORA and GSEA, with attention to gene-gene interactions and pathway topology. It takes about 30 minutes on a reasonably powered computer, and you may want to save the result to a file, and read it from there in subsequent sessions (read the code in the file ``runSPIA.R" for more details).
+<<echo=TRUE,cache=TRUE>>=
+source("Rcode/runSPIA.R")
+@
+
+The pathways returned significant by SPIA are saved to an object named ``keggids.spia".
+<<echo=TRUE,cache=TRUE>>=
+keggids.spia <- paste("hsa",top10ids, sep="")
+@ 
+
+The three keggid lists are now intersected to identify the common pathway returned by all three methods (refer to the Venn diagram in Fig.~\ref{fig:analysis_plan}).
+
+<<echo=TRUE,cache=TRUE, eval=FALSE>>=
+intersect(intersect(keggids.ora, keggids.gsea), keggids.spia)
+@
+
+<<echo=FALSE,cache=TRUE, eval=TRUE>>=
+print(intersect(intersect(keggids.ora, keggids.gsea), keggids.spia))
+@
+
+
+Intersection of three results gives us the single common significantly upregulated KEGG pathway \textit{hsa04380} (Osteoclast Differentiation Pathway).
+\section{Validation Cohort}
+Let us load data from the validation cohort of SS patients.
+<<echo=TRUE,cache=TRUE>>=
+data("esetn.b")
+data("esetn")
+@
+
+Correction for batch effect has been performed (Fig.~\ref{fig:batchplot}).
+<<label=batchplot,include=false,fig=TRUE,echo=TRUE,cache=TRUE, eval=FALSE>>=
+par(mfrow=c(1,2))
+boxplot(exprs(esetn.b), main="Before correction", las=2)
+boxplot(exprs(esetn), main="After correction", las=2)
+@
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width=0.75\textwidth]{batch}
+\caption{Plots showing correction for batch effect. In the right panel, the samples are all aligned at the median gene expression.}
+\label{fig:batchplot}
+\end{center}
+\end{figure}
+
+
+
+\subsection{Permutation test for enrichment}
+Now we will perform a permutation-based enrichment test to provide evidence for over-all up-regulation of the pathway \textit{hsa04380} in SS (validation cohort). For this, we are using the function \textit{permutationTest} of the package \textbf{resample} to calculate the permutation-based p-value accounting for correlation among the pathway genes.
+<<echo=TRUE>>=
+source("Rcode/getPvalResample.R")
+@
+First, we calculate the proportion of significantly up-regulated ($p < 0.05$) genes in the pathway by using a two-sample t-test to test for up-regulation of each pathway gene. This is observed to be $0.447$. Next, we reshuffle the sample groups (i.e. case/control status) $100000$ times and similarly calculate the proportion of up-regulated genes for each permutation replicate. Finally, the permutation-based p-value is obtained as the proportion of replicates where the simulated proportion is greater than the observed value.
+
+\subsection{Generating case vs control scatterplot}
+We calculate the mean expression values (for the two groups: control and SS) and generate the scatter-plot as shown in Fig.\ref{fig:scatterplot}.
+
+\newpage
+<<label=scplot,include=false,fig=TRUE,echo=TRUE,cache=TRUE>>=
+source("Rcode/drawScatterplot.R")
+@
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width=0.75\linewidth]{nibmgss_vignette-scplot}
+\caption{Scatterplot of the \textit{hsa04380} pathway gene expression in NIBMG validation cohort}
+\label{fig:scatterplot}
+\end{center}
+\end{figure}
+
+
+In this plot, each point corresponds to a single gene. The points near the identity line (the diagonal in Fig.~\ref{fig:scatterplot}), correspond to genes with similar expression level in control and SS groups. The genes that are up-regulated in SS are expected to be significantly deviated from the diagonal toward the SS axis. Indeed, for most of the genes, there is much higher expression in SS, as shown in this scatterplot. The up-regulation of these genes in SS is statistically significant (p = 0.00028, permutation test for enrichment). Additional testing  (for each gene; unpaired t-test between control and SS) reveals individual genes significantly up-regulated after multiple-testing correction at an FDR level of 0.05. An expression filter is applied to identify the genes that show a high fold-change (2 or more) and are expressed in significant amounts (intensity of 100 or more). These genes are shown in red on the plot.
+ 
+\subsection{Generating Boxplot of key 25 genes of the Osteoclast Dfferentiation pathway}
+On looking at individual genes, we find that 60 genes were FDR significant.
+<<echo=TRUE,cache=TRUE>>=
+which.lowp <- which(padjn<0.05)
+print(length(which.lowp))
+@
+
+There are 25 genes that are FDR significant and pass the expression filters.
+
+<<echo=TRUE,cache=TRUE>>=
+which.lowp.lowexp <- which(padjn<0.05 & xcon>log2(100) & xss-xcon>1)
+egs.toshow <- names(which.lowp.lowexp)
+print(length(egs.toshow))
+@
+
+List the 25 gene symbols.
+
+<<echo=TRUE,cache=TRUE>>=
+print(as.character(unlist(mget(egs.toshow, org.Hs.egSYMBOL))))
+@
+
+<<label=boxplot,include=false,fig=TRUE,echo=TRUE,cache=TRUE>>=
+source("Rcode/drawBoxplot25genes.R")
+@
+\begin{figure}[htp]
+\begin{center}
+\includegraphics{nibmgss_vignette-boxplot}
+\caption{boxplot of key 25 the pathway genes}
+\label{fig:boxplot}
+\end{center}
+\end{figure}
+
+ Fig.\ref{fig:boxplot} shows the boxplots of the highly significant 25 genes of the pathway \textit{hsa04380} up-regulated in SS. Green color corresponds to the control subjects while the red color corresponds to the cases of SS. Gene symbols are shown at the bottom. For each gene, log-intensity of gene expression has been normalized to the median expression of the control group.
+\newpage
+@
+
+\section{Validation of 25 genes in an Independent Validation Cohort}
+we start by loading the validation data and preprocessing the data before analysing it.
+<<echo=TRUE,cache=TRUE,eval=TRUE>>=
+data(gset)
+source("Rcode/analyse_validation_cohort.R")
+@
+
+We performed Principal Component Analysis of SS vs healthy controls in a new validation dataset, for the $25$ significant genes from osteoclast differentiation pathway. Following is the code chunk that produces
+the $3D$ PCA plot [Fig.7]of control vs SS cases.
+
+<<label=pca,echo=TRUE, include=TRUE, cache=TRUE>>=
+pc<-prcomp(data.frame(t(dat)),scale=TRUE)
+mycol<-rep(c("red"),length(dx))
+mycol[which(dx=="Control")]<-c("green")
+pca3d(pc, components = 1:3, radius=3, col = mycol,title = NULL, new = FALSE,axes.color = "grey", bg = "lightcyan")
+@
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width=0.85\linewidth]{pca_25.png}
+\caption{\textbf{3D PCA plot of control and cases in validation dataset GSE57065:} The SS cases are
+shown in color red and healthy controls in green}
+\label{fig:pca}
+\end{center}
+\end{figure}
+
+\section{Survival Analysis with 25 genes}
+<<label=survival, include=FALSE, fig=TRUE, echo=TRUE, cache=TRUE, eval=FALSE >>=
+source("Rcode/runSurvivalAnalysis.R")
+@
+The outcome information provided in study GSE4607, were subject to analysis for the expression of 25 selected genes from osteoclast differentiation pathway. Asterisk(*) suggests statistically significant (p $< 0.1$) difference in expression between the survival and non-survival SS cases.
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width=0.99\linewidth]{nibmgss_vignette-survival}
+\caption{\textbf{Outcome-wise expression of 25 selected genes:}}
+\label{fig:survival}
+\end{center}
+\end{figure}
+\clearpage
+
+\section{Topology analysis of the selected genes}
+The 25 key genes were divided in to three groups based on location within the KEGG pathway: membrane, nucleus or intermediate. For each group, log-fold changes in gene expression were displayed as box plot Fig\ref {fig:proxplot}
+<<label=proxplot,fig=TRUE, include=FALSE, echo=TRUE,cache=TRUE>>=
+prox.score <- read.delim(file="Metadata/egs25proximalityscore.txt", header=T, sep="\t")
+o <- order(prox.score[,4])
+egs25 <- as.character(prox.score[o,1])
+lfc1 <- lfc[egs25]
+keggsym25 <- as.character(prox.score[o,2])
+mycol <- as.character(prox.score[o,5])
+prox <- as.character(prox.score[o,"Position"])
+par(mar=c(12,5.5,2,2))
+plotdat <- split(lfc1, prox)
+b <- boxplot(plotdat[c("Membrane","Intermediate","Nucleus")],
+outline=F, col=c("red","pink","brown"), ylim=c(0,1.3),
+axes=F, ylab="Relative Gene Expression (log2 scale)")
+ box(col="gray")
+ axis(2)
+ mtext(text=c("Membrane","Intermediate","Nucleus"),
+side=1, line=0.5, at=1:3, col="darkblue",
+font=2, las=2, cex=2)
+@
+\begin{figure}[htp]
+\begin{center}
+\includegraphics[width=0.69\linewidth]{nibmgss_vignette-proxplot}
+\caption{\textbf{Topology analysis of key 25 the pathway genes} }
+\label{fig:proxplot}
+\end{center}
+\end{figure}
+\clearpage
+
+
+\section{Acknowledgement}
+We acknowledge help from our laboratory colleagues at the National Institute of Biomedical Genomics, Kalyani for generation of data from subjects of septic shock, and Dr. Samsiddhi Bhattacharjee for generation of permutation-based p-value.
+
+
+%------------------------------------
+%handy to include this at the end
+%------------------------------------
+\section{Session Information}
+%-------------------------------------
+<<sessionInfo>>=
+sessionInfo()
+@  
+
+\end{document}
+

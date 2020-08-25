@@ -1,0 +1,28 @@
+Egid	Symbol	Position	Score	Color
+9846	GAB2	Intermediate	2.0	pink
+3726	JUNB	Nucleus	5.0	brown
+5594	MAPK1	Intermediate	2.0	pink
+5595	MAPK3	Intermediate	2.0	pink
+4688	NCF2	Intermediate	3.0	pink
+4689	NCF4	Intermediate	3.0	pink
+4792	NFKB1A	Nucleus	4.0	brown
+5294	PIK3CG	Intermediate	2.0	pink
+5336	PLCG2	Intermediate	2.5	pink
+6688	SPI1	Nucleus	5.0	brown
+2209	FCGR1A	Membrane	1.0	red
+3454	IFNAR1	Membrane	1.0	red
+3455	IFNAR2	Membrane	1.0	red
+3459	IFNGR1	Membrane	1.0	red
+3460	IFNGR	Membrane	1.0	red
+11027	LILR2	Membrane	1.0	red
+11026	LILR3	Membrane	1.0	red
+79168	LILR6	Membrane	1.0	red
+10288	LILRB	Membrane	1.0	red
+126014	OSCAR	Membrane	1.0	red
+140885	SIRPA	Membrane	1.0	red
+7305	TYROBP	Membrane	1.0	red
+2212	FCGR2A	Membrane	1.0	red
+3553	IL1B	Membrane	0.0	red
+6850	SYK	Intermediate	2.0	pink
+
+

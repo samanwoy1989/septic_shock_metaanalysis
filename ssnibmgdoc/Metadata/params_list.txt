@@ -1,0 +1,9 @@
+targets.files	eset.files	data.files	ctrl.data.files	data.path	study.name
+Metadata/TARGETS1.txt	Data/sepsis_1_20150717.rda	TableControl_sample probe profile.txt	TableControl_control probe profile.txt	Set1	Sepsis_SCB_Batch_1
+Metadata/TARGETS2.txt	Data/sepsis_2_20150717.rda	TableControl_sample probe profile.txt	TableControl_control probe profile.txt	Set2	Sepsis_SCB_Batch_2
+Metadata/TARGETS3.txt	Data/sepsis_3_20150717.rda	TableControl_sample probe profile.txt	TableControl_control probe profile.txt	Set3	Sepsis_SCB_Batch_3
+Metadata/TARGETS4.txt	Data/sepsis_4_20150717.rda	TableControl_sample probe profile.txt	TableControl_control probe profile.txt	Set4	Sepsis_SCB_Batch_4
+Metadata/TARGETS5.txt	Data/sepsis_5_20150717.rda	TableControl_sample probe profile.txt	TableControl_control probe profile.txt	Set5	Sepsis_SCB_Batch_5
+Metadata/TARGETS6.txt	Data/sepsis_6_20150717.rda	TableControl_sample probe profile.txt	TableControl_control probe profile.txt	Set6	Sepsis_SCB_Batch_6
+Metadata/TARGETS7.txt	Data/sepsis_7_20160129.rda	skmge28_1_16_sample probe profile.txt	skmge28_1_16_Control probe profile.txt	Set7	Sepsis_SCB_Batch_7
+
