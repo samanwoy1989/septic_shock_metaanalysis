@@ -10,10 +10,10 @@ The dataset(s) and the R code supporting the conclusions of this article are ava
 https://figshare.com/ (search for ssnibmg)
 2. Change the directory to where you saved the file. Start R.
 3. At the R prompt, issue the following command:
-install.packages(pkgs=”ssnibmg_1.0.tar.gz”, repos=NULL)
+$ install.packages(pkgs=”ssnibmg_1.0.tar.gz”, repos=NULL)
 4. Now the data package ssnibmg is installed on your computer.
 5. Check with the following command:
-library(“ssnibmg”)
+$ library(“ssnibmg”)
 ### Step 2: Running the analysis code
 6. Dowload the file ssnibmgdoc.zip from
 https://figshare.com/ (search for ssnibmg)
